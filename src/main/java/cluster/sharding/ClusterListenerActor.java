@@ -26,7 +26,7 @@ class ClusterListenerActor extends AbstractLoggingActor {
 
     @Override
     public void preStart() {
-        log().info("start");
+        log().info("Start");
         cluster.subscribe(getSelf(), ClusterEvent.initialStateAsEvents(),
                 MemberEvent.class,
                 UnreachableMember.class);
@@ -34,7 +34,7 @@ class ClusterListenerActor extends AbstractLoggingActor {
 
     @Override
     public void postStop() {
-        log().info("stop");
+        log().info("Stop");
     }
 
     static Props props() {

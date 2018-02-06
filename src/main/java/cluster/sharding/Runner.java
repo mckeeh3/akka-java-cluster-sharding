@@ -41,23 +41,11 @@ public class Runner {
         List<ActorSystem> actorSystems = new ArrayList<>();
 
         for (String port : ports) {
-            Config config = ConfigFactory.parseString(
-                    String.format("akka.remote.netty.tcp.port=%s%n", port) +
-                            String.format("akka.remote.artery.canonical.port=%s%n", port))
-                    .withFallback(ConfigFactory.load()
-                    );
-
-            ActorSystem actorSystem = ActorSystem.create("sharding", config);
+            ActorSystem actorSystem = ActorSystem.create("sharding", setupConfig(port));
 
             actorSystem.actorOf(ClusterListenerActor.props(), "clusterListener");
 
-            ClusterShardingSettings settings = ClusterShardingSettings.create(actorSystem);
-            ActorRef shardingRegion = ClusterSharding.get(actorSystem).start(
-                    "entity",
-                    EntityActor.props(),
-                    settings,
-                    EntityMessage.messageExtractor()
-            );
+            ActorRef shardingRegion = setupClusterSharding(actorSystem);
 
             actorSystem.actorOf(EntityCommandActor.props(shardingRegion), "entityCommand");
             actorSystem.actorOf(EntityQueryActor.props(shardingRegion), "entityQuery");
@@ -65,6 +53,24 @@ public class Runner {
             actorSystems.add(actorSystem);
         }
         return actorSystems;
+    }
+
+    private static Config setupConfig(String port) {
+        return ConfigFactory.parseString(
+                String.format("akka.remote.netty.tcp.port=%s%n", port) +
+                        String.format("akka.remote.artery.canonical.port=%s%n", port))
+                .withFallback(ConfigFactory.load()
+                );
+    }
+
+    private static ActorRef setupClusterSharding(ActorSystem actorSystem) {
+        ClusterShardingSettings settings = ClusterShardingSettings.create(actorSystem);
+        return ClusterSharding.get(actorSystem).start(
+                "entity",
+                EntityActor.props(),
+                settings,
+                EntityMessage.messageExtractor()
+        );
     }
 
     private static void writef(String format, Object... args) {

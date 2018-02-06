@@ -71,7 +71,7 @@ class EntityQueryActor extends AbstractLoggingActor {
 
     @Override
     public void preStart() {
-        log().info("start");
+        log().info("Start");
         ticker = getContext().getSystem().scheduler().schedule(
                 Duration.Zero(),
                 tickInterval,
@@ -84,7 +84,7 @@ class EntityQueryActor extends AbstractLoggingActor {
 
     @Override
     public void postStop() {
-        log().info("stop");
+        log().info("Stop");
         ticker.cancel();
     }
 

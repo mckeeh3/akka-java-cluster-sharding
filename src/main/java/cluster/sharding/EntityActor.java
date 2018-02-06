@@ -50,13 +50,13 @@ class EntityActor extends AbstractLoggingActor {
 
     @Override
     public void preStart() {
-        log().info("start");
+        log().info("Start");
         getContext().setReceiveTimeout(receiveTimeout);
     }
 
     @Override
     public void postStop() {
-        log().info("stop {}", entity == null ? "(not initialized)" : entity.id);
+        log().info("Stop {}", entity == null ? "(not initialized)" : entity.id);
     }
 
     static Props props() {
