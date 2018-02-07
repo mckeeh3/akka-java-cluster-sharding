@@ -35,7 +35,7 @@ class EntityCommandActor extends AbstractLoggingActor {
 
     @Override
     public Receive createReceive() {
-        return receiving;
+        return sending;
     }
 
     private void commandAckSending(EntityMessage.CommandAck commandAck) {

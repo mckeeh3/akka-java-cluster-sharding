@@ -13,9 +13,9 @@ class EntityQueryActor extends AbstractLoggingActor {
     private final ActorRef shardRegion;
     private Cancellable ticker;
     private FiniteDuration tickInterval = Duration.create(2, TimeUnit.SECONDS);
+    private Entity.Id lastQueryId;
     private final Receive sending;
     private final Receive receiving;
-    private Entity.Id lastQueryId;
 
     {
         sending = receiveBuilder()

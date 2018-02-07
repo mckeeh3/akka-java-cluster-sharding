@@ -12,10 +12,6 @@ class EntityMessage {
             this.entity = entity;
         }
 
-        Command(String id, Object value) {
-            this(new Entity(id, value));
-        }
-
         @Override
         public String toString() {
             return String.format("%s[%s]", getClass().getSimpleName(), entity);
@@ -42,10 +38,6 @@ class EntityMessage {
 
         Query(Entity.Id id) {
             this.id = id;
-        }
-
-        Query(String id) {
-            this(new Entity.Id(id));
         }
 
         @Override
