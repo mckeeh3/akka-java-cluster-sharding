@@ -78,6 +78,20 @@ class EntityMessage {
         return new ShardRegion.MessageExtractor() {
             @Override
             public String shardId(Object message) {
+                return extractShardIdFromCommands(message);
+            }
+
+            @Override
+            public String entityId(Object message) {
+                return extractEntityIdFromCommands(message);
+            }
+
+            @Override
+            public Object entityMessage(Object message) {
+                return message;
+            }
+
+            private String extractShardIdFromCommands(Object message) {
                 if (message instanceof Command) {
                     return ((Command) message).entity.id.id.hashCode() % numberOfShards + "";
                 } else if (message instanceof Query) {
@@ -87,8 +101,7 @@ class EntityMessage {
                 }
             }
 
-            @Override
-            public String entityId(Object message) {
+            private String extractEntityIdFromCommands(Object message) {
                 if (message instanceof Command) {
                     return ((Command) message).entity.id.id;
                 } else if (message instanceof Query) {
@@ -96,11 +109,6 @@ class EntityMessage {
                 } else {
                     return null;
                 }
-            }
-
-            @Override
-            public Object entityMessage(Object message) {
-                return message;
             }
         };
     }

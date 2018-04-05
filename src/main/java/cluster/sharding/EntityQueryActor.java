@@ -42,16 +42,16 @@ class EntityQueryActor extends AbstractLoggingActor {
 
     private void tickSending() {
         lastQueryId = Random.entityId(1, 100);
-        shardRegion.tell(new EntityMessage.Query(lastQueryId), getSelf());
+        shardRegion.tell(new EntityMessage.Query(lastQueryId), self());
         getContext().become(receiving);
     }
 
     private void queryAckSending(EntityMessage.QueryAck queryAck) {
-        log().info("Received (late) {} {}", queryAck, getSender());
+        log().info("Received (late) {} {}", queryAck, sender());
     }
 
     private void queryAckNotFoundSending(EntityMessage.QueryAckNotFound queryAckNotFound) {
-        log().info("Received (late) {} {}", queryAckNotFound, getSender());
+        log().info("Received (late) {} {}", queryAckNotFound, sender());
     }
 
     private void tickReceiving() {
@@ -60,24 +60,24 @@ class EntityQueryActor extends AbstractLoggingActor {
     }
 
     private void queryAckReceiving(EntityMessage.QueryAck queryAck) {
-        log().info("Received {} {}", queryAck, getSender());
+        log().info("Received {} {}", queryAck, sender());
         getContext().become(sending);
     }
 
     private void queryAckNotFoundReceiving(EntityMessage.QueryAckNotFound queryAckNotFound) {
-        log().info("Received {} {}", queryAckNotFound, getSender());
+        log().info("Received {} {}", queryAckNotFound, sender());
         getContext().become(sending);
     }
 
     @Override
     public void preStart() {
         log().info("Start");
-        ticker = getContext().getSystem().scheduler().schedule(
+        ticker = context().system().scheduler().schedule(
                 Duration.Zero(),
                 tickInterval,
-                getSelf(),
+                self(),
                 "tick",
-                getContext().getSystem().dispatcher(),
+                context().system().dispatcher(),
                 null
         );
     }

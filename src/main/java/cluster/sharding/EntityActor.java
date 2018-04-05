@@ -27,31 +27,31 @@ class EntityActor extends AbstractLoggingActor {
         if (entity == null) {
             entity = command.entity;
             log().info("initialize {}", entity);
-            getSender().tell(new EntityMessage.CommandAck("initialize", command.entity), getSelf());
+            sender().tell(new EntityMessage.CommandAck("initialize", command.entity), self());
         } else {
             log().info("update {} {} -> {}", entity.id, command.entity.value, entity.value);
             entity.value = command.entity.value;
-            getSender().tell(new EntityMessage.CommandAck("update", command.entity), getSelf());
+            sender().tell(new EntityMessage.CommandAck("update", command.entity), self());
         }
     }
 
     private void query(EntityMessage.Query query) {
         log().info("query {} -> {}", query, entity == null ? "(not initialized)" : entity);
         if (entity == null) {
-            getSender().tell(new EntityMessage.QueryAckNotFound(query.id), getSelf());
+            sender().tell(new EntityMessage.QueryAckNotFound(query.id), self());
         } else {
-            getSender().tell(new EntityMessage.QueryAck(entity), getSelf());
+            sender().tell(new EntityMessage.QueryAck(entity), self());
         }
     }
 
     private void passivate() {
-        getContext().getParent().tell(new ShardRegion.Passivate(PoisonPill.getInstance()), getSelf());
+        context().parent().tell(new ShardRegion.Passivate(PoisonPill.getInstance()), self());
     }
 
     @Override
     public void preStart() {
         log().info("Start");
-        getContext().setReceiveTimeout(receiveTimeout);
+        context().setReceiveTimeout(receiveTimeout);
     }
 
     @Override
