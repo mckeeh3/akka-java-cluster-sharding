@@ -4,7 +4,16 @@ import akka.actor.AbstractLoggingActor;
 import akka.actor.Props;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
-import akka.cluster.ClusterEvent.*;
+import akka.cluster.ClusterEvent.MemberJoined;
+import akka.cluster.ClusterEvent.MemberWeaklyUp;
+import akka.cluster.ClusterEvent.MemberUp;
+import akka.cluster.ClusterEvent.MemberExited;
+import akka.cluster.ClusterEvent.MemberLeft;
+import akka.cluster.ClusterEvent.MemberRemoved;
+import akka.cluster.ClusterEvent.UnreachableMember;
+import akka.cluster.ClusterEvent.ReachableMember;
+import akka.cluster.ClusterEvent.CurrentClusterState;
+import akka.cluster.ClusterEvent.LeaderChanged;
 import akka.cluster.Member;
 
 class ClusterListenerActor extends AbstractLoggingActor {
@@ -14,27 +23,29 @@ class ClusterListenerActor extends AbstractLoggingActor {
     public Receive createReceive() {
         return receiveBuilder()
                 .match(CurrentClusterState.class, this::currentClusterState)
-                .match(MemberUp.class, this::memberUp)
-                .match(MemberEvent.class, this::memberEvent)
                 .match(MemberJoined.class, this::memberJoined)
+                .match(MemberWeaklyUp.class, this::memberWeaklyUp)
+                .match(MemberUp.class, this::memberUp)
+                .match(MemberExited.class, this::memberExited)
                 .match(MemberLeft.class, this::memberLeft)
                 .match(MemberRemoved.class, this::memberRemoved)
-                .match(MemberWeaklyUp.class, this::memberWeaklyUp)
                 .match(UnreachableMember.class, this::unreachableMember)
+                .match(ReachableMember.class, this::reachableMember)
+                .match(LeaderChanged.class, this::leaderChanged)
                 .build();
     }
 
     @Override
     public void preStart() {
-        log().info("Start");
+        log().debug("Start");
         cluster.subscribe(self(), ClusterEvent.initialStateAsEvents(),
-                MemberEvent.class,
+                ClusterEvent.MemberEvent.class,
                 UnreachableMember.class);
     }
 
     @Override
     public void postStop() {
-        log().info("Stop");
+        log().debug("Stop");
     }
 
     static Props props() {
@@ -46,18 +57,23 @@ class ClusterListenerActor extends AbstractLoggingActor {
         logClusterMembers(currentClusterState);
     }
 
+    private void memberJoined(MemberJoined memberJoined) {
+        log().info("{}", memberJoined);
+        logClusterMembers();
+    }
+
+    private void memberWeaklyUp(MemberWeaklyUp memberWeaklyUp) {
+        log().info("{}", memberWeaklyUp);
+        logClusterMembers();
+    }
+
     private void memberUp(MemberUp memberUp) {
         log().info("{}", memberUp);
         logClusterMembers();
     }
 
-    private void memberEvent(MemberEvent memberEvent) {
-        log().info("{}", memberEvent);
-        logClusterMembers();
-    }
-
-    private void memberJoined(MemberJoined memberJoined) {
-        log().info("{}", memberJoined);
+    private void memberExited(MemberExited memberExited) {
+        log().info("{}", memberExited);
         logClusterMembers();
     }
 
@@ -71,13 +87,18 @@ class ClusterListenerActor extends AbstractLoggingActor {
         logClusterMembers();
     }
 
-    private void memberWeaklyUp(MemberWeaklyUp memberWeaklyUp) {
-        log().info("{}", memberWeaklyUp);
+    private void unreachableMember(UnreachableMember unreachableMember) {
+        log().info("{}", unreachableMember);
         logClusterMembers();
     }
 
-    private void unreachableMember(UnreachableMember unreachableMember) {
-        log().info("{}", unreachableMember);
+    private void reachableMember(ReachableMember reachableMember) {
+        log().info("{}", reachableMember);
+        logClusterMembers();
+    }
+
+    private void leaderChanged(LeaderChanged leaderChanged) {
+        log().info("{}", leaderChanged);
         logClusterMembers();
     }
 
