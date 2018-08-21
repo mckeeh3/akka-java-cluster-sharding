@@ -4,6 +4,7 @@ import akka.actor.AbstractLoggingActor;
 import akka.actor.Props;
 import akka.cluster.Cluster;
 import akka.cluster.ClusterEvent;
+import akka.cluster.ClusterEvent.MemberEvent;
 import akka.cluster.ClusterEvent.MemberJoined;
 import akka.cluster.ClusterEvent.MemberWeaklyUp;
 import akka.cluster.ClusterEvent.MemberUp;
@@ -14,6 +15,7 @@ import akka.cluster.ClusterEvent.UnreachableMember;
 import akka.cluster.ClusterEvent.ReachableMember;
 import akka.cluster.ClusterEvent.CurrentClusterState;
 import akka.cluster.ClusterEvent.LeaderChanged;
+import akka.cluster.ClusterEvent.ReachabilityEvent;
 import akka.cluster.Member;
 
 class ClusterListenerActor extends AbstractLoggingActor {
@@ -39,13 +41,15 @@ class ClusterListenerActor extends AbstractLoggingActor {
     public void preStart() {
         log().debug("Start");
         cluster.subscribe(self(), ClusterEvent.initialStateAsEvents(),
-                ClusterEvent.MemberEvent.class,
-                UnreachableMember.class);
+                MemberEvent.class,
+                ReachabilityEvent.class,
+                LeaderChanged.class);
     }
 
     @Override
     public void postStop() {
         log().debug("Stop");
+        cluster.unsubscribe(self());
     }
 
     static Props props() {
