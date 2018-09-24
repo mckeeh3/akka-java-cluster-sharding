@@ -1,7 +1,9 @@
 package cluster.sharding;
 
+import akka.Done;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import akka.actor.CoordinatedShutdown;
 import akka.cluster.Cluster;
 import akka.cluster.sharding.ClusterSharding;
 import akka.cluster.sharding.ClusterShardingSettings;
@@ -14,6 +16,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 public class Runner {
     public static void main(String[] args) {
@@ -35,6 +38,7 @@ public class Runner {
 
         ports.forEach(port -> {
             ActorSystem actorSystem = ActorSystem.create("sharding", setupClusterNodeConfig(port));
+            actorSystems.add(actorSystem);
 
             actorSystem.actorOf(ClusterListenerActor.props(), "clusterListener");
 
@@ -43,7 +47,9 @@ public class Runner {
             actorSystem.actorOf(EntityCommandActor.props(shardingRegion), "entityCommand");
             actorSystem.actorOf(EntityQueryActor.props(shardingRegion), "entityQuery");
 
-            actorSystems.add(actorSystem);
+            addCoordinatedShutdownTask(actorSystem, CoordinatedShutdown.PhaseClusterShutdown());
+
+            actorSystem.log().info("Akka node {}", actorSystem.provider().getDefaultAddress());
         });
 
         return actorSystems;
@@ -64,6 +70,16 @@ public class Runner {
                 settings,
                 EntityMessage.messageExtractor()
         );
+    }
+
+    private static void addCoordinatedShutdownTask(ActorSystem actorSystem, String coordindateShutdownPhase) {
+        CoordinatedShutdown.get(actorSystem).addTask(
+                coordindateShutdownPhase,
+                coordindateShutdownPhase,
+                () -> {
+                    actorSystem.log().warning("Coordinated shutdown phase {}", coordindateShutdownPhase);
+                    return CompletableFuture.completedFuture(Done.getInstance());
+                });
     }
 
     private static void hitEnterToStop() {
