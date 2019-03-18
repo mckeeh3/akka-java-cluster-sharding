@@ -5,7 +5,7 @@
 ~~~~bash
 git clone https://github.com/mckeeh3/akka-java-cluster-sharding.git
 cd akka-java-cluster-sharding
-mvn compile
+mvn clean package
 ~~~~
 The following Maven command runs a signle JVM with 3 Akka actor systems on ports 2551, 2552, and a radmonly selected port.
 ~~~~bash
@@ -15,7 +15,7 @@ To run on specific ports use the following `-D` option for passing in command li
 ~~~~bash
 mvn exec:java -Dexec.args="2551"
 ~~~~
-The default no arguments is equilevalant to the following.
+The default no arguments is equivalent to the following.
 ~~~~bash
 mvn exec:java -Dexec.args="2551 2552 0"
 ~~~~
@@ -56,6 +56,19 @@ alias m4='clear ; mvn exec:java -Dexec.args="0" > /tmp/$(basename $PWD)-4.log'
 The p1-6 alias commands are shortcuts for cd'ing into one of the six project directories.
 The m1-4 alias commands start and Akka node with the appropriate port. Stdout is also redirected to the /tmp directory.
 
-### Description
+### Scripts
 
-TODO
+The project contains 5 scripts that can be used to start and stop individual node or start and stop multiple nodes.
+
+Use the `./start-node N` and `./stop-node N` scripts to start and stop individual nodes. The N argument is the node number,
+which must be between 1 and 9. The start script will start an Akka node running on port 255N. Both `stdin` and `stderr`
+output is set to a file in the `/tmp` directory using the naming convention `/tmp/<project-dir-name>-N.log`.
+
+Use the `./start-cluster N` and `./stop-cluster` scripts to start and stop multiple cluster nodes. The N argument is the
+number of cluster nodes to be started. The `./stop-cluster` script stops all current running nodes.
+
+Use the `./tail-node N` script to `tail -f` the log file for the node N.
+
+### What does this project do?
+
+This is a Java, Maven, Akka project that demonstrates how to setup an Akka cluster and how to use Akka Cluster Sharding.
