@@ -32,18 +32,18 @@ The common usage for cluster sharding is to distribute and engage with individua
 
 In this example project, the entities represent simple bank accounts. Each entity handles incoming deposit and withdrawal messages. Two actors are used to simulate clients that are sending messages to entities. The `EntityCommandActor` and the `EntityQueryActor` randomly generate messages to specific entities. These two actors are used to simulate incoming service requests. In a real implementation, the service would receive incoming messages and forward those messages to specific entities to handle the request messages.
 
-The process of forwarding these messages to the right entities, which could be distributed across multiple JVMs running in a cluster, is handled by cluster sharding. To send a message to an entity the sender simply sends the message to the shard region actor. The shard region actor is responsible for forwarding the message to the correct entity actor. The actual mechanics of this process is described in the
+The process of forwarding these messages to the right entities, which could be distributed across multiple JVMs running in a cluster, is handled by cluster sharding. To send a message to an entity the sender simply sends the message to a shard region actor. The shard region actor is responsible for forwarding the message to the correct entity actor. The actual mechanics of this process is described in the
 [How it works](https://doc.akka.io/docs/akka/current/cluster-sharding.html#how-it-works)
 section of the cluster sharding documentation.
 
 ![Visualization of cluster sharding](docs/images/akka-cluster-k8-3-pods.png)
 <center>Figure 1, Visualization of cluster sharding</center><br/>
 
-The visualization in Figure 1 shows an example of cluster sharding. The blue leaf actors represent the entity actors. Each entity actor represents the state of an entity. The green circles that connect to the entity circles represent the running shard actors. In the example system there 15 shards configured. The shards connect to the orange shard region actors. These orange circles also represent other actors, such as the entity command and query actors. The orange circles also represent the root of the actor system on each cluster node.
+The visualization in Figure 1 shows an example of cluster sharding. The blue leaf actors represent the entity actors. Each entity actor represents the state of an entity. The green circles that connect to the entity circles represent the running shard actors. In the example system there 15 shards configured. The shards connect to the orange shard region actors. These orange circles also represent other actors, such as the entity command and query actors. Also, the orange circles represent the root of the actor system on each cluster node.
 
 ### How it works
 
-The Runner class contains the main method. The main method starts one or more Akka systems and in each actor system it starts instances of multiple actors.
+The Runner class contains the `main` method. The `main` method starts one or more Akka systems and in each actor system it starts instances of multiple actors.
 
 The arguments passed to the main method are expected to be zero or more port numbers. These port numbers will be used to start cluster nodes, one for each specified port.
 
@@ -55,9 +55,9 @@ List<ActorSystem> actorSystems = args.length == 0
         : startupClusterNodes(Arrays.asList(args));
 ~~~
 
-Multiple actor systems may be started in a single JVM. One way to think of an
+Multiple actor systems may be started in a single JVM. However, the typical use case is that a single actor system is started per JVM. One way to think of an
 [actor system](https://doc.akka.io/docs/akka/current/general/actor-systems.html)
-is that they are supercharged thread pools. However, the typical use case is that a single actor system is started per JVM.
+is that they are supercharged thread pools.
 
 The `startupClusterNodes` method is called with the list of specified port numbers. Each port is used to start an actor system and then start up various actors that will run in the demonstration.
 
