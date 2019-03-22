@@ -104,7 +104,7 @@ cd akka-java-cluster-sharding
 mvn clean package
 ~~~
 
-### Running
+### Running from the command line
 
 The following Maven command runs a signle JVM with 3 Akka actor systems on ports 2551, 2552, and a radmonly selected port.
 ~~~bash
@@ -155,7 +155,7 @@ alias m4='clear ; mvn exec:java -Dexec.args="0" > /tmp/$(basename $PWD)-4.log'
 The p1-6 alias commands are shortcuts for cd'ing into one of the six project directories.
 The m1-4 alias commands start and Akka node with the appropriate port. Stdout is also redirected to the /tmp directory.
 
-### Scripts
+### Run Scripts
 
 The project contains 5 scripts that can be used to start and stop individual cluster nodes or start and stop a cluster of nodes.
 
