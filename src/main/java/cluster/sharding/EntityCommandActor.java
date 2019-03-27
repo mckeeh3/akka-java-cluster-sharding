@@ -39,16 +39,18 @@ class EntityCommandActor extends AbstractLoggingActor {
     }
 
     private void commandAckSending(EntityMessage.CommandAck commandAck) {
-        log().warning("Received (late) {} {}", commandAck, sender());
+        log().warning("(late) {} <- {}", commandAck, sender());
     }
 
     private void tickSending() {
-        shardRegion.tell(command(), self());
+        EntityMessage.Command command = command();
+        log().info("{} -> {}", command, shardRegion);
+        shardRegion.tell(command, self());
         getContext().become(receiving);
     }
 
     private void commandAckReceiving(EntityMessage.CommandAck commandAck) {
-        log().info("Received {} {}", commandAck, sender());
+        log().info("{} <- {}", commandAck, sender());
         getContext().become(sending);
     }
 

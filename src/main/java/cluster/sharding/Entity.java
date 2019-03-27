@@ -33,7 +33,7 @@ class Entity implements Serializable {
 
     @Override
     public String toString() {
-        return String.format("%s[%s -> %s]", getClass().getSimpleName(), id, value);
+        return String.format("%s[%s, %s]", getClass().getSimpleName(), id, value);
     }
 
     static class Id implements Serializable {

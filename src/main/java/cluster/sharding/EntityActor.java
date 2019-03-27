@@ -24,23 +24,30 @@ class EntityActor extends AbstractLoggingActor {
     }
 
     private void command(EntityMessage.Command command) {
+        log().info("{} <- {}", command, sender());
         if (entity == null) {
             entity = command.entity;
-            log().info("initialize {}", entity);
-            sender().tell(new EntityMessage.CommandAck("initialize", command.entity), self());
+            final EntityMessage.CommandAck commandAck = EntityMessage.CommandAck.ackInit(command);
+            log().info("{}, {} -> {}", commandAck, command, sender());
+            sender().tell(commandAck, self());
         } else {
-            log().info("update {} {} -> {}", entity.id, command.entity.value, entity.value);
             entity.value = command.entity.value;
-            sender().tell(new EntityMessage.CommandAck("update", command.entity), self());
+            final EntityMessage.CommandAck commandAck = EntityMessage.CommandAck.ackUpdate(command);
+            log().info("{}, {} -< {}", commandAck, command, sender());
+            sender().tell(commandAck, self());
         }
     }
 
     private void query(EntityMessage.Query query) {
-        log().info("query {} -> {}", query, entity == null ? "(not initialized)" : entity);
+        log().info("{} <- {}", query, sender());
         if (entity == null) {
-            sender().tell(new EntityMessage.QueryAckNotFound(query.id), self());
+            final EntityMessage.QueryAckNotFound queryAck = EntityMessage.QueryAckNotFound.ack(query);
+            log().info("{} -> {}", queryAck, sender());
+            sender().tell(queryAck, self());
         } else {
-            sender().tell(new EntityMessage.QueryAck(entity), self());
+            final EntityMessage.QueryAck queryAck = EntityMessage.QueryAck.ack(query, entity);
+            log().info("{} -> {}", queryAck, sender());
+            sender().tell(queryAck, self());
         }
     }
 

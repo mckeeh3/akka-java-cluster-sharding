@@ -13,6 +13,7 @@
         <scala.version>2.12</scala.version>
         <akka.version>2.5.21</akka.version>
         <logback.version>1.2.3</logback.version>
+        <fst.version>2.56</fst.version>
     </properties>
 
     <dependencies>
@@ -47,10 +48,9 @@
             <version>${logback.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-testkit_${scala.version}</artifactId>
-            <version>${akka.version}</version>
-            <scope>test</scope>
+            <groupId>de.ruedigermoeller</groupId>
+            <artifactId>fst</artifactId>
+            <version>${fst.version}</version>
         </dependency>
     </dependencies>
 
