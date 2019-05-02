@@ -6,6 +6,7 @@ import akka.actor.ActorSystem;
 import akka.actor.CoordinatedShutdown;
 import akka.cluster.sharding.ClusterSharding;
 import akka.cluster.sharding.ClusterShardingSettings;
+import akka.management.javadsl.AkkaManagement;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
@@ -27,6 +28,8 @@ public class Runner {
 
         ports.forEach(port -> {
             ActorSystem actorSystem = ActorSystem.create("sharding", setupClusterNodeConfig(port));
+
+            AkkaManagement.get(actorSystem).start();
 
             actorSystem.actorOf(ClusterListenerActor.props(), "clusterListener");
 

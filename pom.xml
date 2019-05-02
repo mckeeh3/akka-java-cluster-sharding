@@ -12,6 +12,7 @@
         <java.version>8</java.version>
         <scala.version>2.12</scala.version>
         <akka.version>2.5.22</akka.version>
+        <akka.management.version>1.0.0</akka.management.version>
         <logback.version>1.2.3</logback.version>
         <fst.version>2.56</fst.version>
     </properties>
@@ -36,6 +37,16 @@
             <groupId>com.typesafe.akka</groupId>
             <artifactId>akka-cluster-metrics_${scala.version}</artifactId>
             <version>${akka.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.lightbend.akka.management</groupId>
+            <artifactId>akka-management_${scala.version}</artifactId>
+            <version>${akka.management.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.lightbend.akka.management</groupId>
+            <artifactId>akka-management-cluster-http_${scala.version}</artifactId>
+            <version>${akka.management.version}</version>
         </dependency>
         <dependency>
             <groupId>com.typesafe.akka</groupId>
