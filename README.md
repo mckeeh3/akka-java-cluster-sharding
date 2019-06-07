@@ -50,9 +50,11 @@ The arguments passed to the main method are expected to be zero or more port num
 If no ports are specified a default is used to start three JVMs using ports 2551, 2552, and 0 respectively.
 
 ~~~java
-List<ActorSystem> actorSystems = args.length == 0
-        ? startupClusterNodes(Arrays.asList("2551", "2552", "0"))
-        : startupClusterNodes(Arrays.asList(args));
+if (args.length == 0) {
+    startupClusterNodes(Arrays.asList("2551", "2552", "0"));
+} else {
+    startupClusterNodes(Arrays.asList(args));
+}
 ~~~
 
 Multiple actor systems may be started in a single JVM. However, the typical use case is that a single actor system is started per JVM. One way to think of an
@@ -81,7 +83,7 @@ private static ActorRef setupClusterSharding(ActorSystem actorSystem) {
 }
 ~~~
 
-This method uses the `ClusterSharding` static `get` method to start a single shard region actor per actor system. More details on how the shard region actors are used is described above. The `get` method is used to create a shard region actor passing it the code to be used to create an instance of an entity actor (`EntityActor.props()`) and the code used to extract entity and shard identifiers from messages that are sent to entity actors (`EntityMessage.messageExtractor()`).
+This method uses the `ClusterSharding` static `get` method to create an instance of a single shard region actor per actor system. More details on how the shard region actors are used is described above. The `get` method is used to create a shard region actor passing it the code to be used to create an instance of an entity actor (`EntityActor.props()`) and the code used to extract entity and shard identifiers from messages that are sent to entity actors (`EntityMessage.messageExtractor()`).
 
 ~~~java
 actorSystem.actorOf(EntityCommandActor.props(shardingRegion), "entityCommand");
@@ -95,6 +97,122 @@ shardRegion.tell(command(), self());
 ~~~
 
 The `shardRegion` actor handles the heavy lifting of routing each message to the correct entity actor.
+
+Entity actors have an interesting life-cycle. When messages are sent to a shard region actor, it routes the message to a shard actor that is responsible for the specific entity as defined by the message entity identifier.
+
+The shared region actor is responsible for handling the routing of entity messages to the specific shard actors, which may involve other cluster sharding internal actors,  and this may include forwarding the message from one node to another.
+
+When a shard actor receives an incoming entity message, it checks to see if the entity actor instance exits. If the entity actor instance does not exist, then an instance of the entity actor is created, and the message is forwarded to the newly started entity actor instance. If the entity actor instance already exists, then the message is forwarded from the shard actor to the specific entity actor instance.
+
+Here is the source code of our example entity actor.
+
+~~~java
+package cluster.sharding;
+
+import akka.actor.AbstractLoggingActor;
+import akka.actor.PoisonPill;
+import akka.actor.Props;
+import akka.actor.ReceiveTimeout;
+import akka.cluster.sharding.ShardRegion;
+import scala.concurrent.duration.Duration;
+import scala.concurrent.duration.FiniteDuration;
+
+import java.util.concurrent.TimeUnit;
+
+class EntityActor extends AbstractLoggingActor {
+    private Entity entity;
+    private final FiniteDuration receiveTimeout = Duration.create(60, TimeUnit.SECONDS);
+
+    @Override
+    public Receive createReceive() {
+        return receiveBuilder()
+                .match(EntityMessage.Command.class, this::command)
+                .match(EntityMessage.Query.class, this::query)
+                .matchEquals(ReceiveTimeout.getInstance(), t -> passivate())
+                .build();
+    }
+
+    private void command(EntityMessage.Command command) {
+        log().info("{} <- {}", command, sender());
+        if (entity == null) {
+            entity = command.entity;
+            final EntityMessage.CommandAck commandAck = EntityMessage.CommandAck.ackInit(command);
+            log().info("{}, {} -> {}", commandAck, command, sender());
+            sender().tell(commandAck, self());
+        } else {
+            entity.value = command.entity.value;
+            final EntityMessage.CommandAck commandAck = EntityMessage.CommandAck.ackUpdate(command);
+            log().info("{}, {} -< {}", commandAck, command, sender());
+            sender().tell(commandAck, self());
+        }
+    }
+
+    private void query(EntityMessage.Query query) {
+        log().info("{} <- {}", query, sender());
+        if (entity == null) {
+            final EntityMessage.QueryAckNotFound queryAck = EntityMessage.QueryAckNotFound.ack(query);
+            log().info("{} -> {}", queryAck, sender());
+            sender().tell(queryAck, self());
+        } else {
+            final EntityMessage.QueryAck queryAck = EntityMessage.QueryAck.ack(query, entity);
+            log().info("{} -> {}", queryAck, sender());
+            sender().tell(queryAck, self());
+        }
+    }
+
+    private void passivate() {
+        context().parent().tell(new ShardRegion.Passivate(PoisonPill.getInstance()), self());
+    }
+
+    @Override
+    public void preStart() {
+        log().info("Start");
+        context().setReceiveTimeout(receiveTimeout);
+    }
+
+    @Override
+    public void postStop() {
+        log().info("Stop {}", entity == null ? "(not initialized)" : entity.id);
+    }
+
+    static Props props() {
+        return Props.create(EntityActor.class);
+    }
+}
+~~~
+
+Entity actors are typically set up to shut themselves down when they stop receiving messages.
+
+~~~java
+@Override
+public void preStart() {
+    log().info("Start");
+    context().setReceiveTimeout(receiveTimeout);
+}
+~~~
+
+The timeout period is set via a call to the `SetReceiveTimeout(...)` method. What this does is whenever the entity actor receives a message the timeout timer is reset.
+
+~~~java
+@Override
+public Receive createReceive() {
+    return receiveBuilder()
+            .match(EntityMessage.Command.class, this::command)
+            .match(EntityMessage.Query.class, this::query)
+            .matchEquals(ReceiveTimeout.getInstance(), t -> passivate())
+            .build();
+}
+~~~
+
+When no messages are received before the timeout period has expired then the entity actor is set a `ReceiveTimeout` message. In our example entity actor a receive timeout message triggers a call to a method called `passivate()`.
+
+~~~java
+private void passivate() {
+    context().parent().tell(new ShardRegion.Passivate(PoisonPill.getInstance()), self());
+}
+~~~
+
+In the `passivate()` method a message is sent to the entity actor's parent actor, which is the shard actor, asking it to trigger a shutdown of this entity actor.
 
 ### Installation
 
