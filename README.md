@@ -90,7 +90,7 @@ actorSystem.actorOf(EntityCommandActor.props(shardingRegion), "entityCommand");
 actorSystem.actorOf(EntityQueryActor.props(shardingRegion), "entityQuery");
 ~~~
 
-The `shardRegion` actor reference is passed as a constructor argument to the `EntityCommandActor` and the `EntityQueryActor`. These actors use the `shardRegion` actor ref to send messages to specific entity actors.
+The `shardRegion` actor reference is passed as a constructor argument to the `EntityCommandActor` and the `EntityQueryActor`. These generate simulated random message traffic, they use the `shardRegion` actor ref to send messages to specific entity actors.
 
 ~~~java
 shardRegion.tell(command(), self());
@@ -100,7 +100,7 @@ The `shardRegion` actor handles the heavy lifting of routing each message to the
 
 Entity actors have an interesting life-cycle. When messages are sent to a shard region actor, it routes the message to a shard actor that is responsible for the specific entity as defined by the message entity identifier.
 
-The shared region actor is responsible for handling the routing of entity messages to the specific shard actors, which may involve other cluster sharding internal actors,  and this may include forwarding the message from one node to another.
+The shared region actor is responsible for handling the routing of entity messages to the specific shard actors, which may involve other cluster sharding internal actors,  and this may include forwarding the message from one cluster node to another.
 
 When a shard actor receives an incoming entity message, it checks to see if the entity actor instance exits. If the entity actor instance does not exist, then an instance of the entity actor is created, and the message is forwarded to the newly started entity actor instance. If the entity actor instance already exists, then the message is forwarded from the shard actor to the specific entity actor instance.
 
