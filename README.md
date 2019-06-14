@@ -45,7 +45,7 @@ The visualization in Figure 1 shows an example of cluster sharding. The blue lea
 
 ### How it works
 
-The Runner class contains the `main` method. The `main` method starts one or more Akka systems and in each actor system it starts instances of multiple actors.
+The `Runner` class contains the `main` method. The `main` method starts one or more Akka systems and in each actor system it starts instances of multiple actors.
 
 The arguments passed to the main method are expected to be zero or more port numbers. These port numbers will be used to start cluster nodes, one for each specified port.
 
